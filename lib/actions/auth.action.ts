@@ -29,31 +29,33 @@ export async function signUp(params: SignUpParams) {
   const { uid, name, email } = params;
 
   try {
-    // check if user exists in db
+    // Check if user exists in Firestore
+    console.log("Checking if user exists in Firestore...");
     const userRecord = await db.collection("users").doc(uid).get();
-    if (userRecord.exists)
+    if (userRecord.exists) {
+      console.log("User already exists:", userRecord.data());
       return {
         success: false,
         message: "User already exists. Please sign in.",
       };
+    }
 
-    // save user to db
+    // Save user to Firestore
+    console.log("Saving user to Firestore...");
     await db.collection("users").doc(uid).set({
       name,
       email,
-      // profileURL,
-      // resumeURL,
     });
 
     return {
       success: true,
       message: "Account created successfully. Please sign in.",
     };
-  } catch (error: unknown) {
+  } catch (error: any) {
     console.error("Error creating user:", error);
 
-    // Handle Firebase specific errors
-    if (error instanceof Error && (error as any).code === "auth/email-already-exists") {
+    // Handle Firebase-specific errors
+    if (error.code === "auth/email-already-exists") {
       return {
         success: false,
         message: "This email is already in use",
@@ -66,7 +68,6 @@ export async function signUp(params: SignUpParams) {
     };
   }
 }
-
 export async function signIn(params: SignInParams) {
   const { email, idToken } = params;
 
